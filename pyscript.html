@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Matrix Lab | Python in the Browser</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://pyscript.net/releases/2025.2.3/core.css">
+  <script type="module" src="https://pyscript.net/releases/2025.2.3/core.js"></script>
+  <py-config>
+    packages = ["numpy"]
+    [[fetch]]
+    files = ["./Matrix-multiplication/mm.py"]
+  </py-config>
+  <script type="py" src="./pyscript_app.py"></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-mark" aria-hidden="true">Py<span>×</span></div>
+    <div><p class="eyebrow">CUNY Algorithms</p><h1>Python Matrix Lab</h1></div>
+    <p class="header-note">The browser is running your Python class through PyScript.</p>
+  </header>
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">PyScript edition</p>
+      <h2>Test the Python implementation in a web page.</h2>
+      <p>This version imports <code>mm.py</code> directly. It is static, browser-based, and suitable for GitHub Pages.</p>
+    </section>
+
+    <section class="control-panel">
+      <div class="section-heading"><div><p class="eyebrow">01 / Setup</p><h2>Choose your experiment</h2></div><span id="dimension-badge" class="badge">Dimension: 4 x 4</span></div>
+      <div class="controls-grid">
+        <label><span>k <small>(required)</small></span><input id="k-input" type="number" min="0" max="8" value="2"><small>Used as 2^k unless n is provided.</small></label>
+        <label><span>n <small>(optional)</small></span><input id="n-input" type="number" min="1" max="64" placeholder="Use 2^k"><small>Overrides 2^k for arbitrary dimensions.</small></label>
+        <label><span>Algorithm</span><select id="algorithm-select"><option value="naive">naive_mm</option><option value="strassen">strassen_mm</option></select><small>Calls the method in mm.py.</small></label>
+      </div>
+      <div class="mode-switch"><button id="manual-mode" class="mode-button is-active" type="button">Enter matrices</button><button id="file-mode" class="mode-button" type="button">Load a file</button></div>
+      <button id="randomize-button" class="quiet-button" type="button">Randomize values</button>
+      <p id="manual-limit-message" class="format-example is-hidden">Manual matrix entry is available up to 10 x 10. Use a file for larger dimensions.</p>
+    </section>
+
+    <section id="manual-section" class="matrix-section">
+      <div class="section-heading"><div><p class="eyebrow">02 / Input</p><h2>Fill the matrices</h2></div></div>
+      <div class="matrix-grid"><div class="matrix-card"><div class="matrix-card-heading"><h3>Matrix A</h3><span>n x n</span></div><div id="matrix-a" class="matrix-input-grid"></div></div><div class="matrix-card"><div class="matrix-card-heading"><h3>Matrix B</h3><span>n x n</span></div><div id="matrix-b" class="matrix-input-grid"></div></div></div>
+    </section>
+
+    <section id="file-section" class="matrix-section is-hidden">
+      <div class="section-heading"><div><p class="eyebrow">02 / Input</p><h2>Load a matrix file</h2></div><span class="file-format">n + n rows of A + n rows of B</span></div>
+      <label class="upload-zone" for="file-input"><strong>Choose a .txt file</strong><span id="file-name">No file selected</span><input id="file-input" type="file" accept=".txt,text/plain"></label>
+      <p class="format-example">Example: <code>2\n1 2\n3 4\n5 6\n7 8</code></p>
+    </section>
+
+    <section class="run-section"><div><p class="eyebrow">03 / Compute</p><h2>Run Python</h2><p id="status-message" class="status">Loading PyScript and mm.py...</p></div><button id="run-button" class="run-button" type="button">Run <span aria-hidden="true">→</span></button></section>
+    <section id="result-section" class="result-section is-hidden"><div class="section-heading"><div><p class="eyebrow">04 / Result</p><h2>Your Python result</h2></div><a id="download-link" class="download-button" download="matrix-result.txt" href="#">Download result</a></div><div class="metrics"><div><span>Method</span><strong id="result-algorithm">naive_mm</strong></div><div><span>Dimension</span><strong id="result-dimension">4 x 4</strong></div><div><span>Elapsed</span><strong id="result-time">0 ms</strong></div></div><div id="result-grid" class="result-grid"></div><div id="result-file" class="result-file is-hidden"><p>This result is larger than 10 x 10 and is hidden here. Download the TXT file to view the output.</p></div></section>
+  </main>
+  <footer class="site-footer">Python runs in the browser through PyScript and Pyodide. No backend is required.</footer>
+</body>
+</html>

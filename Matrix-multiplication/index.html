@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Interactive matrix multiplication with naive and Strassen algorithms.">
+  <title>Matrix Lab | Naive vs Strassen</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="app.js" defer></script>
+</head>
+<body>
+  <header class="site-header">
+    <div class="brand-mark" aria-hidden="true">M<span>x</span>M</div>
+    <div>
+      <p class="eyebrow">CUNY Algorithms</p>
+      <h1>Matrix Lab</h1>
+    </div>
+    <p class="header-note">See two multiplication strategies work side by side.</p>
+  </header>
+
+  <main class="shell">
+    <section class="intro">
+      <p class="eyebrow">Interactive notebook</p>
+      <h2>Multiply. Measure. Understand.</h2>
+      <p>Choose a matrix size, enter two square matrices, then compare the elapsed time for naive multiplication and Strassen multiplication directly in your browser.</p>
+    </section>
+
+    <section class="control-panel" aria-labelledby="setup-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">01 / Setup</p>
+          <h2 id="setup-heading">Choose your experiment</h2>
+        </div>
+        <span id="dimension-badge" class="badge">Dimension: 4 x 4</span>
+      </div>
+      <div class="controls-grid">
+        <label>
+          <span>k <small>(required)</small></span>
+          <input id="k-input" type="number" min="0" max="8" step="1" value="2" required>
+          <small>Without n, the dimension is 2<sup>k</sup>.</small>
+        </label>
+        <label>
+          <span>n <small>(optional)</small></span>
+          <input id="n-input" type="number" min="1" max="64" step="1" placeholder="Use 2^k">
+          <small>Provide n for an arbitrary square dimension.</small>
+        </label>
+        <label>
+          <span>Algorithm</span>
+          <select id="algorithm-select">
+            <option value="naive">Naive multiplication</option>
+            <option value="strassen">Strassen multiplication</option>
+          </select>
+          <small>Timing includes multiplication only.</small>
+        </label>
+      </div>
+      <div class="mode-switch" role="group" aria-label="Matrix input mode">
+        <button class="mode-button is-active" type="button" data-mode="manual">Enter matrices</button>
+        <button class="mode-button" type="button" data-mode="file">Load a file</button>
+      </div>
+    </section>
+
+    <section id="manual-section" class="matrix-section" aria-labelledby="manual-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">02 / Input</p>
+          <h2 id="manual-heading">Fill the matrices</h2>
+        </div>
+        <button id="randomize-button" class="quiet-button" type="button">Randomize values</button>
+      </div>
+      <div class="matrix-grid">
+        <div class="matrix-card">
+          <div class="matrix-card-heading"><h3>Matrix A</h3><span>n x n</span></div>
+          <div id="matrix-a" class="matrix-input-grid" aria-label="Matrix A inputs"></div>
+        </div>
+        <div class="matrix-card">
+          <div class="matrix-card-heading"><h3>Matrix B</h3><span>n x n</span></div>
+          <div id="matrix-b" class="matrix-input-grid" aria-label="Matrix B inputs"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="file-section" class="matrix-section is-hidden" aria-labelledby="file-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">02 / Input</p>
+          <h2 id="file-heading">Load a matrix file</h2>
+        </div>
+        <span class="file-format">n, followed by n rows of A, then n rows of B</span>
+      </div>
+      <label class="upload-zone" for="file-input">
+        <strong>Choose a .txt file</strong>
+        <span id="file-name">No file selected</span>
+        <input id="file-input" type="file" accept=".txt,text/plain">
+      </label>
+      <p class="format-example">Example for 2 x 2: <code>2\n1 2\n3 4\n5 6\n7 8</code></p>
+    </section>
+
+    <section class="run-section" aria-labelledby="run-heading">
+      <div>
+        <p class="eyebrow">03 / Compute</p>
+        <h2 id="run-heading">Run the multiplication</h2>
+        <p id="status-message" class="status" role="status">Ready for input.</p>
+      </div>
+      <button id="run-button" class="run-button" type="button">Run <span aria-hidden="true">→</span></button>
+    </section>
+
+    <section id="result-section" class="result-section is-hidden" aria-labelledby="result-heading">
+      <div class="section-heading">
+        <div>
+          <p class="eyebrow">04 / Result</p>
+          <h2 id="result-heading">Your multiplication</h2>
+        </div>
+        <a id="download-link" class="download-button" download="matrix-result.txt" href="#">Download result</a>
+      </div>
+      <div class="metrics" aria-label="Run metrics">
+        <div><span>Algorithm</span><strong id="result-algorithm">Naive</strong></div>
+        <div><span>Dimension</span><strong id="result-dimension">4 x 4</strong></div>
+        <div><span>Elapsed</span><strong id="result-time">0 ms</strong></div>
+      </div>
+      <div id="result-grid" class="result-grid" aria-label="Matrix multiplication result"></div>
+      <div id="result-file" class="result-file is-hidden">
+        <label for="result-text">Large result file</label>
+        <textarea id="result-text" readonly spellcheck="false"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">Runs locally in your browser. No matrix data leaves this page.</footer>
+</body>
+</html>
