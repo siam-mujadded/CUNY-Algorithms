@@ -47,44 +47,53 @@ class MatrixMultiplication:
         return mat_C
     
     def strassen_mm(self, dimension, mat_A, mat_B):
-        if dimension == 1:
-            return [[mat_A[0][0] * mat_B[0][0]]]
-        
-        modified_dimension = dimension
-        
-        if dimension % 2 != 0: modified_dimension += 1
-        
-        half = modified_dimension // 2
-            
-        if modified_dimension > dimension:
-            mat_A = self.pad_matrix(mat_A)
-            mat_B = self.pad_matrix(mat_B)
-        
-        A_11 = [row[:half] for row in mat_A[:half]]
-        A_12 = [row[half:] for row in mat_A[:half]]
-        A_21 = [row[:half] for row in mat_A[half:]]
-        A_22 = [row[half:] for row in mat_A[half:]]
-        B_11 = [row[:half] for row in mat_B[:half]]
-        B_12 = [row[half:] for row in mat_B[:half]]
-        B_21 = [row[:half] for row in mat_B[half:]]
-        B_22 = [row[half:] for row in mat_B[half:]]
-        P = self.strassen_mm(half, np.add(A_11, A_22), np.add(B_11, B_22))
-        Q = self.strassen_mm(half, np.add(A_21, A_22), B_11)
-        R = self.strassen_mm(half, A_11, np.subtract(B_12, B_22))
-        S = self.strassen_mm(half, A_22, np.subtract(B_21, B_11))
-        T = self.strassen_mm(half, np.add(A_11, A_12), B_22)
-        U = self.strassen_mm(half, np.subtract(A_21, A_11), np.add(B_11, B_12))
-        V = self.strassen_mm(half, np.subtract(A_12, A_22), np.add(B_21, B_22))
-        
-        C_11 = np.add(np.add(P, S), np.subtract(V, T))
-        C_12 = np.add(R, T)
-        C_21 = np.add(Q, S)
-        C_22 = np.add(np.subtract(np.add(P, R), Q), U)
-        
-        C = [list(C_11[i]) + list(C_12[i]) for i in range(half)]
-        C.extend(list(C_21[i]) + list(C_22[i]) for i in range(half))
-        C = [C[i][:dimension] for i in range(dimension)]
-        return C
+        matrix_a = np.asarray(mat_A, dtype=np.float64)
+        matrix_b = np.asarray(mat_B, dtype=np.float64)
+
+        padded_dimension = 1
+        while padded_dimension < dimension:
+            padded_dimension *= 2
+
+        if padded_dimension != dimension:
+            padded_a = np.zeros((padded_dimension, padded_dimension))
+            padded_b = np.zeros((padded_dimension, padded_dimension))
+            padded_a[:dimension, :dimension] = matrix_a
+            padded_b[:dimension, :dimension] = matrix_b
+            matrix_a, matrix_b = padded_a, padded_b
+
+        cutoff = 32
+
+        def multiply(left, right):
+            size = left.shape[0]
+            if size <= cutoff:
+                return left @ right
+
+            half = size // 2
+            left_11 = left[:half, :half]
+            left_12 = left[:half, half:]
+            left_21 = left[half:, :half]
+            left_22 = left[half:, half:]
+            right_11 = right[:half, :half]
+            right_12 = right[:half, half:]
+            right_21 = right[half:, :half]
+            right_22 = right[half:, half:]
+
+            p = multiply(left_11 + left_22, right_11 + right_22)
+            q = multiply(left_21 + left_22, right_11)
+            r = multiply(left_11, right_12 - right_22)
+            s = multiply(left_22, right_21 - right_11)
+            t = multiply(left_11 + left_12, right_22)
+            u = multiply(left_21 - left_11, right_11 + right_12)
+            v = multiply(left_12 - left_22, right_21 + right_22)
+
+            result_11 = p + s - t + v
+            result_12 = r + t
+            result_21 = q + s
+            result_22 = p - q + r + u
+            return np.vstack((np.hstack((result_11, result_12)),
+                              np.hstack((result_21, result_22))))
+
+        return multiply(matrix_a, matrix_b)[:dimension, :dimension].tolist()
 
     def pad_matrix(self, matrix):
         matrix = [row.tolist() if isinstance(row, np.ndarray) else list(row) for row in matrix]
