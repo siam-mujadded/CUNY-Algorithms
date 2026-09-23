@@ -8,6 +8,7 @@ from mm import MatrixMultiplication
 
 SMALL_RESULT_LIMIT = 10
 MANUAL_INPUT_LIMIT = 10
+RANDOM_VALUE_LIMIT = 9
 input_mode = "manual"
 loaded_matrices = None
 randomized_matrices = None
@@ -167,8 +168,8 @@ def randomize(event=None):
     import random
     dimension = dimension_from_controls()
     matrices = [
-        [[random.randint(-9, 9) for _ in range(dimension)] for _ in range(dimension)],
-        [[random.randint(-9, 9) for _ in range(dimension)] for _ in range(dimension)],
+        [[random.randint(-RANDOM_VALUE_LIMIT, RANDOM_VALUE_LIMIT) for _ in range(dimension)] for _ in range(dimension)],
+        [[random.randint(-RANDOM_VALUE_LIMIT, RANDOM_VALUE_LIMIT) for _ in range(dimension)] for _ in range(dimension)],
     ]
     randomized_matrices = (dimension, matrices)
     if dimension <= MANUAL_INPUT_LIMIT:
