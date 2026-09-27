@@ -206,24 +206,69 @@ def verify_result(result, matrix_a, matrix_b):
 def render_benchmark_chart(rows):
     chart = element("#benchmark-chart")
     chart.replaceChildren()
-    maximum = max((max(row["naive_ms"], row["strassen_ms"]) for row in rows), default=1)
-    for row in rows:
-        chart_row = document.createElement("div")
-        chart_row.className = "chart-row"
-        label = document.createElement("span")
-        label.textContent = f"k={row['k']}"
-        bars = document.createElement("div")
-        bars.className = "chart-bars"
-        for key, name in (("naive_ms", "naive"), ("strassen_ms", "strassen")):
-            bar = document.createElement("div")
-            bar.className = f"chart-bar {name}"
-            bar.style.width = f"{max(2, row[key] / maximum * 100):.2f}%"
-            bar.title = f"{name}: {row[key]:.3f} ms"
-            bars.append(bar)
-        values = document.createElement("span")
-        values.textContent = f"{row['naive_ms']:.1f} / {row['strassen_ms']:.1f} ms"
-        chart_row.append(label, bars, values)
-        chart.append(chart_row)
+    if not rows:
+        return
+
+    namespace = "http://www.w3.org/2000/svg"
+    width, height = 820, 430
+    margin_left, margin_right, margin_top, margin_bottom = 70, 30, 45, 65
+    plot_width = width - margin_left - margin_right
+    plot_height = height - margin_top - margin_bottom
+    maximum = max(max(row["naive_ms"], row["strassen_ms"]) for row in rows) or 1
+    y_limit = maximum * 1.1
+
+    svg = document.createElementNS(namespace, "svg")
+    svg.setAttribute("viewBox", f"0 0 {width} {height}")
+    svg.setAttribute("role", "img")
+    svg.setAttribute("aria-label", "Naive and Strassen elapsed time by k")
+
+    def svg_element(tag, attributes=None, text=None):
+        node = document.createElementNS(namespace, tag)
+        for key, value in (attributes or {}).items():
+            node.setAttribute(key, str(value))
+        if text is not None:
+            node.textContent = str(text)
+        svg.append(node)
+        return node
+
+    x_axis = margin_left
+    y_axis = height - margin_bottom
+    svg_element("line", {"x1": x_axis, "y1": margin_top, "x2": x_axis, "y2": y_axis, "class": "chart-axis"})
+    svg_element("line", {"x1": x_axis, "y1": y_axis, "x2": width - margin_right, "y2": y_axis, "class": "chart-axis"})
+    svg_element("text", {"x": width / 2, "y": height - 15, "class": "chart-axis-label", "text-anchor": "middle"}, "k (matrix exponent)")
+    y_label = svg_element("text", {"x": 17, "y": height / 2, "class": "chart-axis-label", "text-anchor": "middle", "transform": f"rotate(-90 17 {height / 2})"}, "Time (ms)")
+
+    for tick in range(6):
+        value = y_limit * tick / 5
+        y = y_axis - plot_height * tick / 5
+        svg_element("line", {"x1": x_axis, "y1": y, "x2": width - margin_right, "y2": y, "class": "chart-grid-line"})
+        svg_element("text", {"x": margin_left - 10, "y": y + 4, "class": "chart-tick", "text-anchor": "end"}, f"{value:.1f}")
+
+    def point(index, value):
+        x = x_axis if len(rows) == 1 else x_axis + plot_width * index / (len(rows) - 1)
+        y = y_axis - plot_height * value / y_limit
+        return x, y
+
+    for index, row in enumerate(rows):
+        x, _ = point(index, 0)
+        svg_element("line", {"x1": x, "y1": y_axis, "x2": x, "y2": y_axis + 5, "class": "chart-axis"})
+        svg_element("text", {"x": x, "y": y_axis + 22, "class": "chart-tick", "text-anchor": "middle"}, row["k"])
+
+    for key, color, label in (("naive_ms", "#df5d35", "Naive"), ("strassen_ms", "#202a25", "Strassen")):
+        points = " ".join(f"{x},{y}" for x, y in (point(index, row[key]) for index, row in enumerate(rows)))
+        svg_element("polyline", {"points": points, "class": "chart-line", "stroke": color})
+        for index, row in enumerate(rows):
+            x, y = point(index, row[key])
+            circle = svg_element("circle", {"cx": x, "cy": y, "r": 5, "class": "chart-point", "fill": color})
+            circle.setAttribute("title", f"{label}, k={row['k']}: {row[key]:.3f} ms")
+
+    legend_x = width - 190
+    for index, (color, label) in enumerate((("#df5d35", "Naive"), ("#202a25", "Strassen"))):
+        y = margin_top - 20 + index * 22
+        svg_element("line", {"x1": legend_x, "y1": y, "x2": legend_x + 24, "y2": y, "stroke": color, "class": "chart-line"})
+        svg_element("text", {"x": legend_x + 32, "y": y + 4, "class": "chart-legend"}, label)
+
+    chart.append(svg)
     chart.classList.remove("is-hidden")
 
 

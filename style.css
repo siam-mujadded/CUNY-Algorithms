@@ -88,11 +88,14 @@ code { padding: 2px 5px; background: var(--mint); }
 .check-control { display: flex; align-items: center; gap: 7px; font: 700 13px "Trebuchet MS", sans-serif; }
 .check-control input { width: auto; }
 .benchmark-status { margin-top: 15px; color: var(--accent-dark); }
-.benchmark-chart { display: grid; gap: 10px; margin-top: 24px; }
-.chart-row { display: grid; grid-template-columns: 70px 1fr 70px; align-items: center; gap: 10px; font: 12px "Trebuchet MS", sans-serif; }
-.chart-bars { display: grid; gap: 4px; }
-.chart-bar { height: 15px; min-width: 2px; background: var(--accent); }
-.chart-bar.strassen { background: var(--ink); }
+.benchmark-chart { margin-top: 24px; padding: 14px; overflow-x: auto; border: 1px solid var(--line); background: #fffdf7; }
+.benchmark-chart svg { display: block; width: 100%; min-width: 620px; height: auto; }
+.chart-axis { stroke: var(--ink); stroke-width: 1.5; }
+.chart-grid-line { stroke: var(--line); stroke-width: 1; }
+.chart-line { fill: none; stroke-width: 3; stroke-linejoin: round; stroke-linecap: round; }
+.chart-point { stroke: var(--panel); stroke-width: 2; }
+.chart-axis-label, .chart-legend { fill: var(--ink); font: 700 13px "Trebuchet MS", sans-serif; }
+.chart-tick { fill: var(--muted); font: 12px "Trebuchet MS", sans-serif; }
 .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-bottom: 25px; background: var(--line); }
 .metrics div { padding: 14px; background: var(--mint); }
 .metrics span { display: block; color: var(--muted); font: 11px "Trebuchet MS", sans-serif; text-transform: uppercase; }
