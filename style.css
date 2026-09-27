@@ -53,6 +53,7 @@ h3 { margin: 0; font-size: 21px; }
 .controls-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; }
 label > span, .result-file label { display: block; margin-bottom: 7px; font: 700 13px "Trebuchet MS", sans-serif; }
 label small { display: block; margin-top: 6px; color: var(--muted); font: 12px "Trebuchet MS", sans-serif; }
+.controls-grid label > span small { display: inline; margin-top: 0; }
 input, select, textarea { width: 100%; border: 1px solid #bec9bf; border-radius: 0; color: var(--ink); background: #fff; font: 16px Georgia, serif; }
 input, select { height: 44px; padding: 8px 10px; }
 input:focus, select:focus, button:focus-visible, a:focus-visible { outline: 3px solid rgba(223, 93, 53, .3); outline-offset: 2px; }

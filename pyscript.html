@@ -30,7 +30,7 @@
     <section class="control-panel">
       <div class="section-heading"><div><p class="eyebrow">01 / Setup</p><h2>Choose your experiment</h2></div><span id="dimension-badge" class="badge">Dimension: 4 x 4</span></div>
       <div class="controls-grid">
-        <label><span>k <small>(required)</small></span><input id="k-input" type="number" min="0" max="8" value="2"><small>Used as 2^k unless n is provided.</small></label>
+        <label><span>k <small>(optional)</small></span><input id="k-input" type="number" min="0" max="8" value="2"><small>Used as 2^k unless n is provided.</small></label>
         <label><span>n <small>(optional)</small></span><input id="n-input" type="number" min="1" max="64" placeholder="Use 2^k"><small>Overrides 2^k for arbitrary dimensions.</small></label>
         <label><span>Algorithm</span><select id="algorithm-select"><option value="naive">naive_mm</option><option value="strassen">strassen_mm</option></select><small>Calls the method in mm.py.</small></label>
       </div>
