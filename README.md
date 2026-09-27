@@ -20,11 +20,11 @@ The Python test page will be available at `https://<username>.github.io/<reposit
 
 ### Benchmark files
 
-The benchmark section accepts 1 to 7 test cases. The file format is:
+The benchmark section accepts consecutive test cases from `k = 0` through a selected maximum `k` (up to 7). The file format is:
 
 ```text
 number_of_cases
-k_for_case_1
+k_for_case_1 (0)
 2^k rows for matrix A
 2^k rows for matrix B
 k_for_case_2
@@ -33,15 +33,27 @@ k_for_case_2
 ...
 ```
 
-Each `k` must be an integer from 1 through 7. For example, this is one case with `k = 1`, so both matrices are `2 x 2`:
+Each `k` must be consecutive from 0 through the selected maximum. For `k = 0`, each matrix is `1 x 1`, so the two matrix rows are two scalar values. Example with cases `k = 0, 1, 2`:
 
 ```text
 1
+3
+0
+2
 1
 1 0
 0 1
 1 2
 3 4
+2
+1 1 1 1
+1 1 1 1
+1 1 1 1
+1 1 1 1
+1 1 1 1
+1 1 1 1
+1 1 1 1
+1 1 1 1
 ```
 
 The page can generate a random benchmark file, download it, or run it immediately. It measures both `naive_mm` and `strassen_mm` for every case, displays a timing graph, and creates `matrix-results.txt` containing timings, measured operation totals, optional NumPy correctness checks, and both multiplication results. It also runs both methods on all-ones matrices for `k = 0` through the largest benchmark `k`, collecting the actual additions/subtractions and multiplications from the methods, then generates three logarithmic operation-count charts, `operation-counts.csv`, and `timings.csv`.

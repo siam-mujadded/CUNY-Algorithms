@@ -97,6 +97,7 @@ code { padding: 2px 5px; background: var(--mint); }
 .chart-point { stroke: var(--panel); stroke-width: 2; }
 .chart-axis-label, .chart-legend { fill: var(--ink); font: 700 13px "Trebuchet MS", sans-serif; }
 .chart-tick { fill: var(--muted); font: 12px "Trebuchet MS", sans-serif; }
+.chart-value { font: 700 10px "Trebuchet MS", sans-serif; }
 .benchmark-table { margin-top: 24px; overflow-x: auto; }
 .benchmark-table table { width: 100%; border-collapse: collapse; font: 12px "Trebuchet MS", sans-serif; }
 .benchmark-table th, .benchmark-table td { padding: 8px 10px; border: 1px solid var(--line); text-align: right; white-space: nowrap; }

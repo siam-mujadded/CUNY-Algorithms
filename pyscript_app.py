@@ -131,8 +131,8 @@ def parse_benchmark_file(contents):
         case_count = int(lines[0])
     except ValueError as error:
         raise ValueError(f"The first line must be the number of cases, from 1 to 7. {example}") from error
-    if not 1 <= case_count <= 7:
-        raise ValueError(f"The first line must be the number of cases, from 1 to 7. {example}")
+    if not 1 <= case_count <= 8:
+        raise ValueError(f"The first line must be the number of cases, from 1 to 8, including k=0. {example}")
 
     cases = []
     line_index = 1
@@ -144,8 +144,9 @@ def parse_benchmark_file(contents):
         except ValueError as error:
             raise ValueError(f"Case {case_number} must start with an integer k from 1 to 7. {example}") from error
         line_index += 1
-        if not 1 <= exponent <= 7:
-            raise ValueError(f"Case {case_number} has invalid k. Use a value from 1 to 7. {example}")
+        expected_exponent = case_number - 1
+        if exponent != expected_exponent or not 0 <= exponent <= 7:
+            raise ValueError(f"Case {case_number} must use consecutive k={expected_exponent}. {example}")
         dimension = 2 ** exponent
         matrices = []
         for matrix_number in range(2):
@@ -217,9 +218,9 @@ def timing_csv(rows):
 
 def generate_benchmark(event=None):
     global benchmark_cases
-    case_count = int(element("#benchmark-case-count").value) if element("#benchmark-case-count") else 7
+    maximum_exponent = int(element("#benchmark-case-count").value) if element("#benchmark-case-count") else 7
     cases = []
-    for exponent in range(1, case_count + 1):
+    for exponent in range(maximum_exponent + 1):
         dimension = 2 ** exponent
         matrices = [
             [[random.randint(-5, 5) for _ in range(dimension)] for _ in range(dimension)],
@@ -228,7 +229,7 @@ def generate_benchmark(event=None):
         cases.append((exponent, dimension, matrices))
     benchmark_cases = cases
     download_text("#benchmark-download-link", "matrix-benchmark.txt", benchmark_file_text(cases))
-    element("#benchmark-status").textContent = f"Generated {case_count} test cases. Download the file or run it now."
+    element("#benchmark-status").textContent = f"Generated cases k=0 through k={maximum_exponent}. Download the file or run it now."
 
 
 def set_busy(is_busy):
@@ -308,6 +309,7 @@ def render_line_chart(selector, rows, first_key, second_key, first_label, second
             x, y = point(index, row[key])
             circle = svg_element("circle", {"cx": x, "cy": y, "r": 5, "class": "chart-point", "fill": color})
             circle.setAttribute("title", f"{label}, k={row['k']}: {row[key]:.3f} ms")
+            svg_element("text", {"x": x, "y": y - 10 - (10 if label == second_label else 0), "class": "chart-value", "fill": color, "text-anchor": "middle"}, f"{row[key]:.3f}")
 
     legend_x = width - 190
     for index, (color, label) in enumerate((("#df5d35", first_label), ("#202a25", second_label))):
