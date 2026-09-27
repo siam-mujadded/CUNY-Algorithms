@@ -67,7 +67,7 @@ class MatrixMultiplication:
         def multiply(left, right):
             size = left.shape[0]
             if size == 1:
-                return np.dot(left, right), 0, 1
+                return np.array([[left[0, 0] * right[0, 0]]]), 0, 1
 
             additions = 0
             multiplications = 0
@@ -128,14 +128,21 @@ class MatrixMultiplication:
                                     s_multiplications, t_multiplications, u_multiplications,
                                     v_multiplications))
 
-            result_11 = p + s - t + v
-            result_12 = r + t
-            result_21 = q + s
-            result_22 = p - q + r + u
+            # result_11 = p + s - t + v
+            # result_12 = r + t
+            # result_21 = q + s
+            # result_22 = p - q + r + u
             additions += 8 * half ** 2
-            return (np.vstack((np.hstack((result_11, result_12)),
-                               np.hstack((result_21, result_22)))),
-                    additions, multiplications)
+            # return (np.vstack((np.hstack((result_11, result_12)),
+            #                    np.hstack((result_21, result_22)))),
+            #         additions, multiplications)
+            
+            result = np.empty((size, size), dtype=left.dtype)
+            result[:half, :half]  = p + s - t + v
+            result[:half, half:]  = r + t
+            result[half:, :half]  = q + s
+            result[half:, half:]  = p - q + r + u
+            return (result, additions, multiplications)
 
         result, additions, multiplications = multiply(matrix_a, matrix_b)
         return result[:dimension, :dimension].tolist(), additions, multiplications
