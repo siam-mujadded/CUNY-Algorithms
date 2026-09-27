@@ -51,9 +51,11 @@
     </section>
 
     <section class="run-section"><div><p class="eyebrow">03 / Compute</p><h2>Run Python</h2><p id="status-message" class="status">Loading PyScript and mm.py...</p></div><div class="run-actions"><span id="spinner" class="spinner is-hidden" aria-label="Calculation in progress"></span><button id="run-button" class="run-button" type="button">Run <span aria-hidden="true">→</span></button></div></section>
-    <section id="result-section" class="result-section is-hidden"><div class="section-heading"><div><p class="eyebrow">04 / Result</p><h2>Your Python result</h2></div><a id="download-link" class="download-button" download="matrix-result.txt" href="#">Download result</a></div><div class="metrics"><div><span>Method</span><strong id="result-algorithm">naive_mm</strong></div><div><span>Dimension</span><strong id="result-dimension">4 x 4</strong></div><div><span>Elapsed</span><strong id="result-time">0 ms</strong></div></div><div id="result-grid" class="result-grid"></div><div id="result-file" class="result-file is-hidden"><p>This result is larger than 10 x 10 and is hidden here. Download the TXT file to view the output.</p></div></section>
+    <details id="result-section" class="collapsible-section result-section is-hidden"><summary><span class="eyebrow">04 / Result</span><strong>Result of a matrix multiplication</strong></summary><div class="collapsible-content"><div class="section-heading"><div><p class="eyebrow">04 / Result</p><h2>Your Python result</h2></div><a id="download-link" class="download-button" download="matrix-result.txt" href="#">Download result</a></div><div class="metrics"><div><span>Method</span><strong id="result-algorithm">naive_mm</strong></div><div><span>Dimension</span><strong id="result-dimension">4 x 4</strong></div><div><span>Elapsed</span><strong id="result-time">0 ms</strong></div></div><div id="result-grid" class="result-grid"></div><div id="result-file" class="result-file is-hidden"><p>This result is larger than 10 x 10 and is hidden here. Download the TXT file to view the output.</p></div></div></details>
 
-    <section class="matrix-section benchmark-section">
+    <details id="benchmark-section" class="collapsible-section matrix-section benchmark-section">
+      <summary><span class="eyebrow">05 / Benchmark</span><strong>Benchmark testing</strong></summary>
+      <div class="collapsible-content">
       <div class="section-heading"><div><p class="eyebrow">05 / Benchmark</p><h2>Run a file of test cases</h2></div><span class="file-format">k=0–9</span></div>
       <p class="format-example">The first line is the number of cases. Include cases consecutively from k = 0 through k = K. Each case starts with k, followed by 2 x 2<sup>k</sup> rows: first matrix A, then matrix B. For k = 0, the two rows are the two scalar values.</p>
       <div class="benchmark-actions"><label class="upload-zone compact-upload" for="benchmark-file-input"><strong>Choose benchmark file</strong><span id="benchmark-file-name">No file selected</span><input id="benchmark-file-input" type="file" accept=".txt,text/plain"></label><label><span>Maximum k</span><select id="benchmark-case-count"><option selected>0</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option></select></label><button id="generate-benchmark-button" class="quiet-button" type="button">Generate random file</button><button id="run-benchmark-button" class="run-button" type="button">Run benchmark</button><label class="check-control"><input id="correctness-check" type="checkbox"> Verify with NumPy</label></div>
@@ -71,7 +73,8 @@
         <div id="operation-total-chart" class="benchmark-chart is-hidden" aria-label="Total operation counts"></div>
       </div>
       <div id="operation-table" class="benchmark-table is-hidden"></div>
-    </section>
+      </div>
+    </details>
   </main>
   <footer class="site-footer">Python runs in the browser through PyScript and Pyodide. No backend is required.</footer>
 </body>

@@ -45,6 +45,13 @@ h3 { margin: 0; font-size: 21px; }
 .intro { max-width: 720px; padding-bottom: 48px; }
 .intro p:last-child { max-width: 650px; margin-bottom: 0; color: var(--muted); font-size: 18px; }
 .control-panel, .matrix-section, .run-section, .result-section { padding: 30px; border: 1px solid var(--line); background: rgba(255, 253, 247, .84); box-shadow: var(--shadow); }
+.collapsible-section { padding: 0; }
+.collapsible-section > summary { display: flex; align-items: center; gap: 14px; padding: 22px 30px; cursor: pointer; list-style: none; }
+.collapsible-section > summary::-webkit-details-marker { display: none; }
+.collapsible-section > summary::before { content: "+"; display: grid; place-items: center; width: 25px; height: 25px; border: 1px solid var(--line); color: var(--accent-dark); font: 700 18px/1 "Trebuchet MS", sans-serif; }
+.collapsible-section[open] > summary::before { content: "-"; }
+.collapsible-section > summary strong { font: 700 20px Georgia, serif; }
+.collapsible-content { padding: 0 30px 30px; }
 .control-panel { border-top: 4px solid var(--accent); }
 .matrix-section, .run-section, .result-section { margin-top: 20px; }
 .section-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; }
@@ -118,6 +125,8 @@ code { padding: 2px 5px; background: var(--mint); }
   .site-header { align-items: flex-start; padding: 22px 0 38px; }
   .header-note { display: none; }
   .control-panel, .matrix-section, .run-section, .result-section { padding: 20px; }
+  .collapsible-section > summary { padding: 18px 20px; }
+  .collapsible-content { padding: 0 20px 20px; }
   .controls-grid, .matrix-grid { grid-template-columns: 1fr; }
   .section-heading { flex-direction: column; }
   .badge, .file-format { align-self: flex-start; }

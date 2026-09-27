@@ -369,6 +369,7 @@ def show_result(result, dimension, method, elapsed):
     result = result.tolist() if hasattr(result, "tolist") else result
     result_text = format_matrix(result)
     element("#result-section").classList.remove("is-hidden")
+    element("#result-section").open = True
     element("#result-algorithm").textContent = method
     element("#result-dimension").textContent = f"{dimension} x {dimension}"
     element("#result-time").textContent = f"{elapsed:.3f} ms"
@@ -425,6 +426,7 @@ async def run_multiplication(event=None):
 async def run_benchmark(event=None):
     global benchmark_cases
     set_busy(True)
+    element("#benchmark-section").open = True
     element("#benchmark-status").textContent = "Running benchmark..."
     try:
         await asyncio.sleep(0)
