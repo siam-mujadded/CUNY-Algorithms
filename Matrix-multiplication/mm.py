@@ -46,23 +46,23 @@ class MatrixMultiplication:
                 mat_C[i].append(sum)
         return mat_C
     
-    def strassen_mm(self, dimension, mat_A, mat_B):
+    def strassen_mm(self, dimension, mat_A, mat_B, arbitrary_dim=False):
         matrix_a = np.asarray(mat_A, dtype=np.float64)
         matrix_b = np.asarray(mat_B, dtype=np.float64)
 
-        padded_dimension = 2 ** int(np.ceil(np.log2(dimension)))
-
-        if padded_dimension != dimension:
-            padded_a = np.zeros((padded_dimension, padded_dimension))
-            padded_b = np.zeros((padded_dimension, padded_dimension))
-            padded_a[:dimension, :dimension] = matrix_a
-            padded_b[:dimension, :dimension] = matrix_b
-            matrix_a, matrix_b = padded_a, padded_b
+        if arbitrary_dim:
+            padded_dimension = 2 ** int(np.ceil(np.log2(dimension)))
+            if padded_dimension != dimension:
+                padded_a = np.zeros((padded_dimension, padded_dimension))
+                padded_b = np.zeros((padded_dimension, padded_dimension))
+                padded_a[:dimension, :dimension] = matrix_a
+                padded_b[:dimension, :dimension] = matrix_b
+                matrix_a, matrix_b = padded_a, padded_b
 
         def multiply(left, right):
             size = left.shape[0]
-            if size == 1:
-                return left * right
+            if size <= 2:
+                return np.dot(left, right)
 
             half = size // 2
             left_11 = left[:half, :half]
@@ -90,10 +90,3 @@ class MatrixMultiplication:
                               np.hstack((result_21, result_22))))
 
         return multiply(matrix_a, matrix_b)[:dimension, :dimension].tolist()
-
-    def pad_matrix(self, matrix):
-        matrix = [row.tolist() if isinstance(row, np.ndarray) else list(row) for row in matrix]
-        for row in matrix:
-            row.append(0)
-        matrix.append([0] * len(matrix[0]))
-        return matrix
