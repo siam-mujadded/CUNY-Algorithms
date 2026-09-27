@@ -79,6 +79,20 @@ code { padding: 2px 5px; background: var(--mint); }
 .status { margin: 0; color: #c1d2c5; }
 .run-button { min-width: 130px; border: 0; padding: 15px 22px; color: var(--ink); background: var(--yellow); font: 700 15px "Trebuchet MS", sans-serif; }
 .run-button:hover { background: #f7df8e; }
+.run-actions { display: flex; align-items: center; gap: 14px; }
+.spinner { width: 22px; height: 22px; border: 3px solid rgba(255, 253, 247, .35); border-top-color: var(--yellow); border-radius: 50%; animation: spin .7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.benchmark-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 10px; }
+.compact-upload { min-height: 54px; flex: 1 1 260px; padding: 10px 14px; }
+.compact-upload strong { font-size: 13px; }
+.check-control { display: flex; align-items: center; gap: 7px; font: 700 13px "Trebuchet MS", sans-serif; }
+.check-control input { width: auto; }
+.benchmark-status { margin-top: 15px; color: var(--accent-dark); }
+.benchmark-chart { display: grid; gap: 10px; margin-top: 24px; }
+.chart-row { display: grid; grid-template-columns: 70px 1fr 70px; align-items: center; gap: 10px; font: 12px "Trebuchet MS", sans-serif; }
+.chart-bars { display: grid; gap: 4px; }
+.chart-bar { height: 15px; min-width: 2px; background: var(--accent); }
+.chart-bar.strassen { background: var(--ink); }
 .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-bottom: 25px; background: var(--line); }
 .metrics div { padding: 14px; background: var(--mint); }
 .metrics span { display: block; color: var(--muted); font: 11px "Trebuchet MS", sans-serif; text-transform: uppercase; }

@@ -18,6 +18,34 @@ PyScript downloads its runtime and NumPy from the internet on first load. GitHub
 
 The Python test page will be available at `https://<username>.github.io/<repository>/pyscript.html`.
 
+### Benchmark files
+
+The benchmark section accepts 1 to 7 test cases. The file format is:
+
+```text
+number_of_cases
+k_for_case_1
+2^k rows for matrix A
+2^k rows for matrix B
+k_for_case_2
+2^k rows for matrix A
+2^k rows for matrix B
+...
+```
+
+Each `k` must be an integer from 1 through 7. For example, this is one case with `k = 1`, so both matrices are `2 x 2`:
+
+```text
+1
+1
+1 0
+0 1
+1 2
+3 4
+```
+
+The page can generate a random benchmark file, download it, or run it immediately. It measures both `naive_mm` and `strassen_mm` for every case, displays a timing graph, and creates `matrix-results.txt` containing timings, optional NumPy correctness checks, and both multiplication results.
+
 The site is static: GitHub Pages does not need a build command, server, package manager, or backend. `index.html`, `style.css`, and `app.js` must remain together in the published folder.
 
 ## Run locally

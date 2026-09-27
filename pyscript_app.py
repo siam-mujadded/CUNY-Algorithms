@@ -1,7 +1,10 @@
 from js import Blob, URL, document, performance
 from pyscript import window
 from pyscript.ffi import create_proxy
+import asyncio
 import sys
+import numpy as np
+import random
 
 sys.path.append("Matrix-multiplication")
 from mm import MatrixMultiplication
@@ -12,6 +15,7 @@ RANDOM_VALUE_LIMIT = 9
 input_mode = "manual"
 loaded_matrices = None
 randomized_matrices = None
+benchmark_cases = None
 proxies = []
 
 
@@ -110,6 +114,119 @@ def format_matrix(matrix):
     return f"{dimension}\n" + "\n".join(rows)
 
 
+def download_text(selector, filename, contents):
+    blob = Blob.new([contents], {"type": "text/plain"})
+    link = element(selector)
+    link.href = URL.createObjectURL(blob)
+    link.download = filename
+    link.classList.remove("is-hidden")
+
+
+def parse_benchmark_file(contents):
+    lines = [line.strip() for line in contents.splitlines() if line.strip()]
+    example = "Example: 1\\n2\\n1 0\\n0 1\\n1 2\\n3 4"
+    if not lines:
+        raise ValueError(f"Benchmark file is empty. {example}")
+    try:
+        case_count = int(lines[0])
+    except ValueError as error:
+        raise ValueError(f"The first line must be the number of cases, from 1 to 7. {example}") from error
+    if not 1 <= case_count <= 7:
+        raise ValueError(f"The first line must be the number of cases, from 1 to 7. {example}")
+
+    cases = []
+    line_index = 1
+    for case_number in range(1, case_count + 1):
+        if line_index >= len(lines):
+            raise ValueError(f"Missing k for case {case_number}. {example}")
+        try:
+            exponent = int(lines[line_index])
+        except ValueError as error:
+            raise ValueError(f"Case {case_number} must start with an integer k from 1 to 7. {example}") from error
+        line_index += 1
+        if not 1 <= exponent <= 7:
+            raise ValueError(f"Case {case_number} has invalid k. Use a value from 1 to 7. {example}")
+        dimension = 2 ** exponent
+        matrices = []
+        for matrix_number in range(2):
+            matrix = []
+            for row_number in range(dimension):
+                if line_index >= len(lines):
+                    raise ValueError(f"Case {case_number} is missing matrix rows. {example}")
+                row = lines[line_index].split()
+                line_index += 1
+                if len(row) != dimension:
+                    raise ValueError(f"Case {case_number} row {row_number + 1} must contain {dimension} values. {example}")
+                try:
+                    matrix.append([float(value) for value in row])
+                except ValueError as error:
+                    raise ValueError(f"Case {case_number} contains a non-numeric value. {example}") from error
+            matrices.append(matrix)
+        cases.append((exponent, dimension, matrices))
+    if line_index != len(lines):
+        raise ValueError(f"The file has extra rows after the declared cases. {example}")
+    return cases
+
+
+def benchmark_file_text(cases):
+    lines = [str(len(cases))]
+    for exponent, _, matrices in cases:
+        lines.append(str(exponent))
+        lines.extend(" ".join(format_number(value) for value in row) for matrix in matrices for row in matrix)
+    return "\n".join(lines)
+
+
+def generate_benchmark(event=None):
+    global benchmark_cases
+    case_count = int(element("#benchmark-case-count").value) if element("#benchmark-case-count") else 7
+    cases = []
+    for exponent in range(1, case_count + 1):
+        dimension = 2 ** exponent
+        matrices = [
+            [[random.randint(-5, 5) for _ in range(dimension)] for _ in range(dimension)],
+            [[random.randint(-5, 5) for _ in range(dimension)] for _ in range(dimension)],
+        ]
+        cases.append((exponent, dimension, matrices))
+    benchmark_cases = cases
+    download_text("#benchmark-download-link", "matrix-benchmark.txt", benchmark_file_text(cases))
+    element("#benchmark-status").textContent = f"Generated {case_count} test cases. Download the file or run it now."
+
+
+def set_busy(is_busy):
+    element("#spinner").classList.toggle("is-hidden", not is_busy)
+    element("#run-button").disabled = is_busy
+    element("#run-benchmark-button").disabled = is_busy
+
+
+def verify_result(result, matrix_a, matrix_b):
+    expected = np.matmul(np.asarray(matrix_a), np.asarray(matrix_b))
+    return bool(np.allclose(np.asarray(result), expected))
+
+
+def render_benchmark_chart(rows):
+    chart = element("#benchmark-chart")
+    chart.replaceChildren()
+    maximum = max((max(row["naive_ms"], row["strassen_ms"]) for row in rows), default=1)
+    for row in rows:
+        chart_row = document.createElement("div")
+        chart_row.className = "chart-row"
+        label = document.createElement("span")
+        label.textContent = f"k={row['k']}"
+        bars = document.createElement("div")
+        bars.className = "chart-bars"
+        for key, name in (("naive_ms", "naive"), ("strassen_ms", "strassen")):
+            bar = document.createElement("div")
+            bar.className = f"chart-bar {name}"
+            bar.style.width = f"{max(2, row[key] / maximum * 100):.2f}%"
+            bar.title = f"{name}: {row[key]:.3f} ms"
+            bars.append(bar)
+        values = document.createElement("span")
+        values.textContent = f"{row['naive_ms']:.1f} / {row['strassen_ms']:.1f} ms"
+        chart_row.append(label, bars, values)
+        chart.append(chart_row)
+    chart.classList.remove("is-hidden")
+
+
 def show_result(result, dimension, method, elapsed):
     result = result.tolist() if hasattr(result, "tolist") else result
     result_text = format_matrix(result)
@@ -135,8 +252,10 @@ def show_result(result, dimension, method, elapsed):
     element("#download-link").href = URL.createObjectURL(blob)
 
 
-def run_multiplication(event=None):
+async def run_multiplication(event=None):
+    set_busy(True)
     try:
+        await asyncio.sleep(0)
         dimension = loaded_matrices[0] if input_mode == "file" and loaded_matrices else dimension_from_controls()
         if input_mode == "file" and loaded_matrices:
             matrices = loaded_matrices[1]
@@ -153,7 +272,7 @@ def run_multiplication(event=None):
         if method == "naive":
             result = multiplication.naive_mm()
         else:
-            result = multiplication.strassen_mm(dimension, matrices[0], matrices[1])
+            result = multiplication.strassen_mm(dimension, matrices[0], matrices[1], arbitrary_dim=True)
         if result is None:
             raise RuntimeError("strassen_mm returned None. Complete its even-dimension branch in mm.py.")
         elapsed = performance.now() - start
@@ -161,6 +280,50 @@ def run_multiplication(event=None):
         element("#status-message").textContent = "Complete. This result came from mm.py."
     except (RuntimeError, TypeError, ValueError, IndexError) as error:
         element("#status-message").textContent = str(error)
+    finally:
+        set_busy(False)
+
+
+async def run_benchmark(event=None):
+    global benchmark_cases
+    set_busy(True)
+    element("#benchmark-status").textContent = "Running benchmark..."
+    try:
+        await asyncio.sleep(0)
+        if not benchmark_cases:
+            raise ValueError("Choose a benchmark file or generate one first.")
+        check_correctness = element("#correctness-check").checked
+        rows = []
+        report = ["Matrix multiplication benchmark", "k,dimension,naive_ms,strassen_ms,naive_correct,strassen_correct"]
+        for exponent, dimension, matrices in benchmark_cases:
+            multiplication = MatrixMultiplication(exponent, dim=dimension, irregular=False)
+            multiplication.mat_A = matrices[0]
+            multiplication.mat_B = matrices[1]
+
+            start = performance.now()
+            naive_result = multiplication.naive_mm()
+            naive_elapsed = performance.now() - start
+
+            start = performance.now()
+            strassen_result = multiplication.strassen_mm(dimension, matrices[0], matrices[1])
+            strassen_elapsed = performance.now() - start
+            naive_correct = verify_result(naive_result, matrices[0], matrices[1]) if check_correctness else "not checked"
+            strassen_correct = verify_result(strassen_result, matrices[0], matrices[1]) if check_correctness else "not checked"
+            rows.append({"k": exponent, "dimension": dimension, "naive_ms": naive_elapsed, "strassen_ms": strassen_elapsed})
+            report.append(f"{exponent},{dimension},{naive_elapsed:.6f},{strassen_elapsed:.6f},{naive_correct},{strassen_correct}")
+            report.append("Naive result:")
+            report.append(format_matrix(naive_result))
+            report.append("Strassen result:")
+            report.append(format_matrix(strassen_result))
+            await asyncio.sleep(0)
+
+        render_benchmark_chart(rows)
+        download_text("#benchmark-result-link", "matrix-results.txt", "\n".join(report))
+        element("#benchmark-status").textContent = f"Completed {len(rows)} cases. Download the result file for timings and verification."
+    except (RuntimeError, TypeError, ValueError, IndexError) as error:
+        element("#benchmark-status").textContent = str(error)
+    finally:
+        set_busy(False)
 
 
 def randomize(event=None):
@@ -207,6 +370,20 @@ async def on_file_change(event):
         element("#status-message").textContent = str(error)
 
 
+async def on_benchmark_file_change(event):
+    global benchmark_cases
+    file = event.target.files.item(0)
+    if not file:
+        return
+    element("#benchmark-file-name").textContent = file.name
+    try:
+        benchmark_cases = parse_benchmark_file(await file.text())
+        element("#benchmark-status").textContent = f"Validated {len(benchmark_cases)} test cases. Ready to run."
+    except (TypeError, ValueError) as error:
+        benchmark_cases = None
+        element("#benchmark-status").textContent = str(error)
+
+
 def bind(selector, event_name, callback):
     proxy = create_proxy(callback)
     proxies.append(proxy)
@@ -216,9 +393,12 @@ def bind(selector, event_name, callback):
 bind("#k-input", "input", update_dimension)
 bind("#n-input", "input", update_dimension)
 bind("#run-button", "click", run_multiplication)
+bind("#run-benchmark-button", "click", run_benchmark)
+bind("#generate-benchmark-button", "click", generate_benchmark)
 bind("#randomize-button", "click", randomize)
 bind("#manual-mode", "click", lambda event: set_mode("manual"))
 bind("#file-mode", "click", lambda event: set_mode("file"))
 bind("#file-input", "change", on_file_change)
+bind("#benchmark-file-input", "change", on_benchmark_file_change)
 update_dimension()
 element("#status-message").textContent = "Python loaded. Ready for input."
