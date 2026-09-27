@@ -44,7 +44,7 @@ Each `k` must be an integer from 1 through 7. For example, this is one case with
 3 4
 ```
 
-The page can generate a random benchmark file, download it, or run it immediately. It measures both `naive_mm` and `strassen_mm` for every case, displays a timing graph, and creates `matrix-results.txt` containing timings, optional NumPy correctness checks, and both multiplication results.
+The page can generate a random benchmark file, download it, or run it immediately. It measures both `naive_mm` and `strassen_mm` for every case, displays a timing graph, and creates `matrix-results.txt` containing timings, measured operation totals, optional NumPy correctness checks, and both multiplication results. It also runs both methods on all-ones matrices for `k = 0` through the largest benchmark `k`, collecting the actual additions/subtractions and multiplications from the methods, then generates three logarithmic operation-count charts, `operation-counts.csv`, and `timings.csv`.
 
 The site is static: GitHub Pages does not need a build command, server, package manager, or backend. `index.html`, `style.css`, and `app.js` must remain together in the published folder.
 

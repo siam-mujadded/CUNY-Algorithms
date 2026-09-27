@@ -38,13 +38,18 @@ class MatrixMultiplication:
         
     def naive_mm(self):
         mat_C = [[] for _ in range(self.dim)]
+        additions = 0
+        multiplications = 0
         for i in range(self.dim):
             for j in range(self.dim):
                 sum = 0
                 for k in range(self.dim):
                     sum += self.mat_A[i][k] * self.mat_B[k][j]
+                    multiplications += 1
+                    if k > 0:
+                        additions += 1
                 mat_C[i].append(sum)
-        return mat_C
+        return mat_C, additions, multiplications
     
     def strassen_mm(self, dimension, mat_A, mat_B, arbitrary_dim=False):
         matrix_a = np.asarray(mat_A, dtype=np.float64)
@@ -61,8 +66,17 @@ class MatrixMultiplication:
 
         def multiply(left, right):
             size = left.shape[0]
-            if size <= 2:
-                return np.dot(left, right)
+            if size == 1:
+                return np.dot(left, right), 0, 1
+
+            additions = 0
+            multiplications = 0
+
+            def add(left_matrix, right_matrix):
+                return left_matrix + right_matrix, left_matrix.size
+
+            def subtract(left_matrix, right_matrix):
+                return left_matrix - right_matrix, left_matrix.size
 
             half = size // 2
             left_11 = left[:half, :half]
@@ -74,19 +88,54 @@ class MatrixMultiplication:
             right_21 = right[half:, :half]
             right_22 = right[half:, half:]
 
-            p = multiply(left_11 + left_22, right_11 + right_22)
-            q = multiply(left_21 + left_22, right_11)
-            r = multiply(left_11, right_12 - right_22)
-            s = multiply(left_22, right_21 - right_11)
-            t = multiply(left_11 + left_12, right_22)
-            u = multiply(left_21 - left_11, right_11 + right_12)
-            v = multiply(left_12 - left_22, right_21 + right_22)
+            left_sum, count = add(left_11, left_22)
+            additions += count
+            right_sum, count = add(right_11, right_22)
+            additions += count
+            p, p_additions, p_multiplications = multiply(left_sum, right_sum)
+
+            left_sum, count = add(left_21, left_22)
+            additions += count
+            q, q_additions, q_multiplications = multiply(left_sum, right_11)
+
+            right_difference, count = subtract(right_12, right_22)
+            additions += count
+            r, r_additions, r_multiplications = multiply(left_11, right_difference)
+
+            right_difference, count = subtract(right_21, right_11)
+            additions += count
+            s, s_additions, s_multiplications = multiply(left_22, right_difference)
+
+            left_sum, count = add(left_11, left_12)
+            additions += count
+            t, t_additions, t_multiplications = multiply(left_sum, right_22)
+
+            left_difference, count = subtract(left_21, left_11)
+            additions += count
+            right_sum, count = add(right_11, right_12)
+            additions += count
+            u, u_additions, u_multiplications = multiply(left_difference, right_sum)
+
+            left_difference, count = subtract(left_12, left_22)
+            additions += count
+            right_sum, count = add(right_21, right_22)
+            additions += count
+            v, v_additions, v_multiplications = multiply(left_difference, right_sum)
+
+            additions += sum((p_additions, q_additions, r_additions, s_additions,
+                              t_additions, u_additions, v_additions))
+            multiplications += sum((p_multiplications, q_multiplications, r_multiplications,
+                                    s_multiplications, t_multiplications, u_multiplications,
+                                    v_multiplications))
 
             result_11 = p + s - t + v
             result_12 = r + t
             result_21 = q + s
             result_22 = p - q + r + u
-            return np.vstack((np.hstack((result_11, result_12)),
-                              np.hstack((result_21, result_22))))
+            additions += 8 * half ** 2
+            return (np.vstack((np.hstack((result_11, result_12)),
+                               np.hstack((result_21, result_22)))),
+                    additions, multiplications)
 
-        return multiply(matrix_a, matrix_b)[:dimension, :dimension].tolist()
+        result, additions, multiplications = multiply(matrix_a, matrix_b)
+        return result[:dimension, :dimension].tolist(), additions, multiplications

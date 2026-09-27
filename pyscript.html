@@ -59,9 +59,18 @@
       <div class="benchmark-actions"><label class="upload-zone compact-upload" for="benchmark-file-input"><strong>Choose benchmark file</strong><span id="benchmark-file-name">No file selected</span><input id="benchmark-file-input" type="file" accept=".txt,text/plain"></label><label><span>Cases</span><select id="benchmark-case-count"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option selected>7</option></select></label><button id="generate-benchmark-button" class="quiet-button" type="button">Generate random file</button><button id="run-benchmark-button" class="run-button" type="button">Run benchmark</button><label class="check-control"><input id="correctness-check" type="checkbox"> Verify with NumPy</label></div>
       <p class="format-example"><code>2<br>1<br>1 0<br>0 1<br>1 2<br>3 4<br>2<br>...</code></p>
       <a id="benchmark-download-link" class="download-button is-hidden" download="matrix-benchmark.txt" href="#">Download generated input</a>
+      <a id="operation-csv-link" class="download-button is-hidden" download="operation-counts.csv" href="#">Download operation counts CSV</a>
+      <a id="timing-csv-link" class="download-button is-hidden" download="timings.csv" href="#">Download timings CSV</a>
       <a id="benchmark-result-link" class="download-button is-hidden" download="matrix-results.txt" href="#">Download benchmark results</a>
       <p id="benchmark-status" class="status benchmark-status"></p>
       <div id="benchmark-chart" class="benchmark-chart is-hidden" aria-label="Benchmark performance graph"></div>
+      <div id="timing-table" class="benchmark-table is-hidden"></div>
+      <div class="operation-charts">
+        <div id="addition-chart" class="benchmark-chart is-hidden" aria-label="Addition and subtraction operation counts"></div>
+        <div id="multiplication-chart" class="benchmark-chart is-hidden" aria-label="Multiplication operation counts"></div>
+        <div id="operation-total-chart" class="benchmark-chart is-hidden" aria-label="Total operation counts"></div>
+      </div>
+      <div id="operation-table" class="benchmark-table is-hidden"></div>
     </section>
   </main>
   <footer class="site-footer">Python runs in the browser through PyScript and Pyodide. No backend is required.</footer>

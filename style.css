@@ -97,6 +97,11 @@ code { padding: 2px 5px; background: var(--mint); }
 .chart-point { stroke: var(--panel); stroke-width: 2; }
 .chart-axis-label, .chart-legend { fill: var(--ink); font: 700 13px "Trebuchet MS", sans-serif; }
 .chart-tick { fill: var(--muted); font: 12px "Trebuchet MS", sans-serif; }
+.benchmark-table { margin-top: 24px; overflow-x: auto; }
+.benchmark-table table { width: 100%; border-collapse: collapse; font: 12px "Trebuchet MS", sans-serif; }
+.benchmark-table th, .benchmark-table td { padding: 8px 10px; border: 1px solid var(--line); text-align: right; white-space: nowrap; }
+.benchmark-table th { color: var(--panel); background: var(--ink); }
+.benchmark-table td:first-child, .benchmark-table th:first-child { text-align: left; }
 .metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1px; margin-bottom: 25px; background: var(--line); }
 .metrics div { padding: 14px; background: var(--mint); }
 .metrics span { display: block; color: var(--muted); font: 11px "Trebuchet MS", sans-serif; text-transform: uppercase; }

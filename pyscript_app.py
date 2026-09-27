@@ -176,6 +176,45 @@ def benchmark_file_text(cases):
     return "\n".join(lines)
 
 
+def measured_operation_rows(max_exponent):
+    rows = []
+    for exponent in range(max_exponent + 1):
+        dimension = 2 ** exponent
+        ones = [[1] * dimension for _ in range(dimension)]
+        multiplication = MatrixMultiplication(exponent, dim=dimension, irregular=False)
+        multiplication.mat_A = ones
+        multiplication.mat_B = ones
+        _, naive_additions, naive_multiplications = multiplication.naive_mm()
+        _, strassen_additions, strassen_multiplications = multiplication.strassen_mm(dimension, ones, ones)
+        rows.append({
+            "k": exponent,
+            "dimension": dimension,
+            "naive_additions": naive_additions,
+            "naive_multiplications": naive_multiplications,
+            "naive_total": naive_additions + naive_multiplications,
+            "strassen_additions": strassen_additions,
+            "strassen_multiplications": strassen_multiplications,
+            "strassen_total": strassen_additions + strassen_multiplications,
+        })
+    return rows
+
+
+def operation_csv(rows):
+    lines = ["k,n,naive_additions_subtractions,naive_multiplications,naive_total,strassen_additions_subtractions,strassen_multiplications,strassen_total"]
+    for row in rows:
+        lines.append(",".join(str(row[key]) for key in (
+            "k", "dimension", "naive_additions", "naive_multiplications", "naive_total",
+            "strassen_additions", "strassen_multiplications", "strassen_total")))
+    return "\n".join(lines)
+
+
+def timing_csv(rows):
+    lines = ["k,n,naive_time_ms,strassen_time_ms"]
+    for row in rows:
+        lines.append(f"{row['k']},{row['dimension']},{row['naive_ms']:.6f},{row['strassen_ms']:.6f}")
+    return "\n".join(lines)
+
+
 def generate_benchmark(event=None):
     global benchmark_cases
     case_count = int(element("#benchmark-case-count").value) if element("#benchmark-case-count") else 7
@@ -203,8 +242,8 @@ def verify_result(result, matrix_a, matrix_b):
     return bool(np.allclose(np.asarray(result), expected))
 
 
-def render_benchmark_chart(rows):
-    chart = element("#benchmark-chart")
+def render_line_chart(selector, rows, first_key, second_key, first_label, second_label, y_label, logarithmic=False):
+    chart = element(selector)
     chart.replaceChildren()
     if not rows:
         return
@@ -214,8 +253,9 @@ def render_benchmark_chart(rows):
     margin_left, margin_right, margin_top, margin_bottom = 70, 30, 45, 65
     plot_width = width - margin_left - margin_right
     plot_height = height - margin_top - margin_bottom
-    maximum = max(max(row["naive_ms"], row["strassen_ms"]) for row in rows) or 1
+    maximum = max(max(row[first_key], row[second_key]) for row in rows) or 1
     y_limit = maximum * 1.1
+    log_limit = np.log10(max(y_limit, 10)) if logarithmic else None
 
     svg = document.createElementNS(namespace, "svg")
     svg.setAttribute("viewBox", f"0 0 {width} {height}")
@@ -236,17 +276,24 @@ def render_benchmark_chart(rows):
     svg_element("line", {"x1": x_axis, "y1": margin_top, "x2": x_axis, "y2": y_axis, "class": "chart-axis"})
     svg_element("line", {"x1": x_axis, "y1": y_axis, "x2": width - margin_right, "y2": y_axis, "class": "chart-axis"})
     svg_element("text", {"x": width / 2, "y": height - 15, "class": "chart-axis-label", "text-anchor": "middle"}, "k (matrix exponent)")
-    y_label = svg_element("text", {"x": 17, "y": height / 2, "class": "chart-axis-label", "text-anchor": "middle", "transform": f"rotate(-90 17 {height / 2})"}, "Time (ms)")
+    svg_element("text", {"x": 17, "y": height / 2, "class": "chart-axis-label", "text-anchor": "middle", "transform": f"rotate(-90 17 {height / 2})"}, y_label)
 
-    for tick in range(6):
-        value = y_limit * tick / 5
-        y = y_axis - plot_height * tick / 5
+    if logarithmic:
+        tick_values = [10 ** exponent for exponent in range(int(np.floor(np.log10(maximum))) + 1) if 10 ** exponent <= y_limit]
+        if 1 not in tick_values:
+            tick_values.insert(0, 1)
+    else:
+        tick_values = [y_limit * tick / 5 for tick in range(6)]
+    for value in tick_values:
+        fraction = np.log10(max(value, 1)) / log_limit if logarithmic else value / y_limit
+        y = y_axis - plot_height * fraction
         svg_element("line", {"x1": x_axis, "y1": y, "x2": width - margin_right, "y2": y, "class": "chart-grid-line"})
         svg_element("text", {"x": margin_left - 10, "y": y + 4, "class": "chart-tick", "text-anchor": "end"}, f"{value:.1f}")
 
     def point(index, value):
         x = x_axis if len(rows) == 1 else x_axis + plot_width * index / (len(rows) - 1)
-        y = y_axis - plot_height * value / y_limit
+        fraction = np.log10(max(value, 1)) / log_limit if logarithmic else value / y_limit
+        y = y_axis - plot_height * fraction
         return x, y
 
     for index, row in enumerate(rows):
@@ -254,7 +301,7 @@ def render_benchmark_chart(rows):
         svg_element("line", {"x1": x, "y1": y_axis, "x2": x, "y2": y_axis + 5, "class": "chart-axis"})
         svg_element("text", {"x": x, "y": y_axis + 22, "class": "chart-tick", "text-anchor": "middle"}, row["k"])
 
-    for key, color, label in (("naive_ms", "#df5d35", "Naive"), ("strassen_ms", "#202a25", "Strassen")):
+    for key, color, label in ((first_key, "#df5d35", first_label), (second_key, "#202a25", second_label)):
         points = " ".join(f"{x},{y}" for x, y in (point(index, row[key]) for index, row in enumerate(rows)))
         svg_element("polyline", {"points": points, "class": "chart-line", "stroke": color})
         for index, row in enumerate(rows):
@@ -263,13 +310,57 @@ def render_benchmark_chart(rows):
             circle.setAttribute("title", f"{label}, k={row['k']}: {row[key]:.3f} ms")
 
     legend_x = width - 190
-    for index, (color, label) in enumerate((("#df5d35", "Naive"), ("#202a25", "Strassen"))):
+    for index, (color, label) in enumerate((("#df5d35", first_label), ("#202a25", second_label))):
         y = margin_top - 20 + index * 22
         svg_element("line", {"x1": legend_x, "y1": y, "x2": legend_x + 24, "y2": y, "stroke": color, "class": "chart-line"})
         svg_element("text", {"x": legend_x + 32, "y": y + 4, "class": "chart-legend"}, label)
 
     chart.append(svg)
     chart.classList.remove("is-hidden")
+
+
+def render_benchmark_chart(rows):
+    render_line_chart("#benchmark-chart", rows, "naive_ms", "strassen_ms", "Naive", "Strassen", "Time (ms)")
+
+
+def render_operation_charts(rows):
+    render_line_chart("#addition-chart", rows, "naive_additions", "strassen_additions", "Naive", "Strassen", "Additions / subtractions", logarithmic=True)
+    render_line_chart("#multiplication-chart", rows, "naive_multiplications", "strassen_multiplications", "Naive", "Strassen", "Multiplications", logarithmic=True)
+    render_line_chart("#operation-total-chart", rows, "naive_total", "strassen_total", "Naive", "Strassen", "Total operations", logarithmic=True)
+
+
+def render_table(selector, headers, rows):
+    container = element(selector)
+    container.replaceChildren()
+    table = document.createElement("table")
+    header_row = document.createElement("tr")
+    for header in headers:
+        cell = document.createElement("th")
+        cell.textContent = header
+        header_row.append(cell)
+    table.append(header_row)
+    for values in rows:
+        table_row = document.createElement("tr")
+        for value in values:
+            cell = document.createElement("td")
+            cell.textContent = str(value)
+            table_row.append(cell)
+        table.append(table_row)
+    container.append(table)
+    container.classList.remove("is-hidden")
+
+
+def render_evaluation_tables(timing_rows, operation_data):
+    render_table(
+        "#timing-table",
+        ("k", "n", "Naive time (ms)", "Strassen time (ms)"),
+        ((row["k"], row["dimension"], f"{row['naive_ms']:.6f}", f"{row['strassen_ms']:.6f}") for row in timing_rows),
+    )
+    render_table(
+        "#operation-table",
+        ("n", "Naive add/sub", "Naive mult", "Naive total", "Strassen add/sub", "Strassen mult", "Strassen total"),
+        ((row["dimension"], row["naive_additions"], row["naive_multiplications"], row["naive_total"], row["strassen_additions"], row["strassen_multiplications"], row["strassen_total"]) for row in operation_data),
+    )
 
 
 def show_result(result, dimension, method, elapsed):
@@ -315,14 +406,14 @@ async def run_multiplication(event=None):
         method = element("#algorithm-select").value
         start = performance.now()
         if method == "naive":
-            result = multiplication.naive_mm()
+            result, additions, multiplications = multiplication.naive_mm()
         else:
-            result = multiplication.strassen_mm(dimension, matrices[0], matrices[1], arbitrary_dim=True)
+            result, additions, multiplications = multiplication.strassen_mm(dimension, matrices[0], matrices[1], arbitrary_dim=True)
         if result is None:
             raise RuntimeError("strassen_mm returned None. Complete its even-dimension branch in mm.py.")
         elapsed = performance.now() - start
         show_result(result, dimension, "naive_mm" if method == "naive" else "strassen_mm", elapsed)
-        element("#status-message").textContent = "Complete. This result came from mm.py."
+        element("#status-message").textContent = f"Complete. {additions} additions/subtractions and {multiplications} multiplications counted."
     except (RuntimeError, TypeError, ValueError, IndexError) as error:
         element("#status-message").textContent = str(error)
     finally:
@@ -339,30 +430,35 @@ async def run_benchmark(event=None):
             raise ValueError("Choose a benchmark file or generate one first.")
         check_correctness = element("#correctness-check").checked
         rows = []
-        report = ["Matrix multiplication benchmark", "k,dimension,naive_ms,strassen_ms,naive_correct,strassen_correct"]
+        report = ["Matrix multiplication benchmark", "k,dimension,naive_ms,strassen_ms,naive_total_operations,strassen_total_operations,naive_correct,strassen_correct"]
         for exponent, dimension, matrices in benchmark_cases:
             multiplication = MatrixMultiplication(exponent, dim=dimension, irregular=False)
             multiplication.mat_A = matrices[0]
             multiplication.mat_B = matrices[1]
 
             start = performance.now()
-            naive_result = multiplication.naive_mm()
+            naive_result, naive_additions, naive_multiplications = multiplication.naive_mm()
             naive_elapsed = performance.now() - start
 
             start = performance.now()
-            strassen_result = multiplication.strassen_mm(dimension, matrices[0], matrices[1])
+            strassen_result, strassen_additions, strassen_multiplications = multiplication.strassen_mm(dimension, matrices[0], matrices[1])
             strassen_elapsed = performance.now() - start
             naive_correct = verify_result(naive_result, matrices[0], matrices[1]) if check_correctness else "not checked"
             strassen_correct = verify_result(strassen_result, matrices[0], matrices[1]) if check_correctness else "not checked"
             rows.append({"k": exponent, "dimension": dimension, "naive_ms": naive_elapsed, "strassen_ms": strassen_elapsed})
-            report.append(f"{exponent},{dimension},{naive_elapsed:.6f},{strassen_elapsed:.6f},{naive_correct},{strassen_correct}")
+            report.append(f"{exponent},{dimension},{naive_elapsed:.6f},{strassen_elapsed:.6f},{naive_additions + naive_multiplications},{strassen_additions + strassen_multiplications},{naive_correct},{strassen_correct}")
             report.append("Naive result:")
             report.append(format_matrix(naive_result))
             report.append("Strassen result:")
             report.append(format_matrix(strassen_result))
             await asyncio.sleep(0)
 
+        operation_data = measured_operation_rows(max(row["k"] for row in rows))
+        download_text("#operation-csv-link", "operation-counts.csv", operation_csv(operation_data))
+        download_text("#timing-csv-link", "timings.csv", timing_csv(rows))
         render_benchmark_chart(rows)
+        render_operation_charts(operation_data)
+        render_evaluation_tables(rows, operation_data)
         download_text("#benchmark-result-link", "matrix-results.txt", "\n".join(report))
         element("#benchmark-status").textContent = f"Completed {len(rows)} cases. Download the result file for timings and verification."
     except (RuntimeError, TypeError, ValueError, IndexError) as error:
