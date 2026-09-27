@@ -50,9 +50,7 @@ class MatrixMultiplication:
         matrix_a = np.asarray(mat_A, dtype=np.float64)
         matrix_b = np.asarray(mat_B, dtype=np.float64)
 
-        padded_dimension = 1
-        while padded_dimension < dimension:
-            padded_dimension *= 2
+        padded_dimension = 2 ** int(np.ceil(np.log2(dimension)))
 
         if padded_dimension != dimension:
             padded_a = np.zeros((padded_dimension, padded_dimension))
@@ -61,12 +59,10 @@ class MatrixMultiplication:
             padded_b[:dimension, :dimension] = matrix_b
             matrix_a, matrix_b = padded_a, padded_b
 
-        cutoff = 32
-
         def multiply(left, right):
             size = left.shape[0]
-            if size <= cutoff:
-                return left @ right
+            if size == 1:
+                return left * right
 
             half = size // 2
             left_11 = left[:half, :half]
