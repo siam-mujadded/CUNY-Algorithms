@@ -131,8 +131,8 @@ def parse_benchmark_file(contents):
         case_count = int(lines[0])
     except ValueError as error:
         raise ValueError(f"The first line must be the number of cases, from 1 to 7. {example}") from error
-    if not 1 <= case_count <= 8:
-        raise ValueError(f"The first line must be the number of cases, from 1 to 8, including k=0. {example}")
+    if not 1 <= case_count <= 10:
+        raise ValueError(f"The first line must be the number of cases, from 1 to 10, including k=0. {example}")
 
     cases = []
     line_index = 1
@@ -145,7 +145,7 @@ def parse_benchmark_file(contents):
             raise ValueError(f"Case {case_number} must start with an integer k from 1 to 7. {example}") from error
         line_index += 1
         expected_exponent = case_number - 1
-        if exponent != expected_exponent or not 0 <= exponent <= 7:
+        if exponent != expected_exponent or not 0 <= exponent <= 9:
             raise ValueError(f"Case {case_number} must use consecutive k={expected_exponent}. {example}")
         dimension = 2 ** exponent
         matrices = []

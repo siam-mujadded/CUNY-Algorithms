@@ -20,7 +20,7 @@ The Python test page will be available at `https://<username>.github.io/<reposit
 
 ### Benchmark files
 
-The benchmark section accepts consecutive test cases from `k = 0` through a selected maximum `k` (up to 7). The file format is:
+The benchmark section accepts consecutive test cases from `k = 0` through a selected maximum `k` (up to 9). The file format is:
 
 ```text
 number_of_cases
